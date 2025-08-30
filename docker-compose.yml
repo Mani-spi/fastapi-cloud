@@ -1,0 +1,43 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_container
+    restart: always
+    env_file: .env
+    environment:
+      # Ensure native auth:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_HOST=%
+    # Remove public port exposure for safety during test:
+    # ports:
+    #   - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build: .
+    container_name: fastapi_container
+    restart: always
+    env_file: .env
+    environment:
+      - MYSQL_HOST=db         # important for your database.py defaults
+      - MYSQL_DB=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    # For persistence of uploaded images:
+    volumes:
+      - ./static:/code/static
+
+# ⚠️ REMOVE or COMMENT OUT nginx service while Django is live on 80/443
+#  nginx:
+#    ...
+
+volumes:
+  mysql_data:

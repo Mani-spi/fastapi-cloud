@@ -2,7 +2,7 @@ import requests
 from datetime import datetime
 
 # url = "http://192.168.0.126:9000/submit/"
-url = "http://49.206.118.215:8080/submit/"
+url = "http://157.173.222.91:8000/submit/"
 
 # Running List
 running_list_payload = {
@@ -98,7 +98,7 @@ flow_details_payload = {
             "NACKCode": "None"
         },
         "Flow_Request": {
-            "batch_id": 107,
+            "batch_id": 109,
             "batch_name": "Batch 1",
             "machine_id": 10,
             "machine_name": "DD",

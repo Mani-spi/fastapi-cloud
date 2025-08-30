@@ -22,8 +22,12 @@ from fastapi.staticfiles import StaticFiles
 app = FastAPI()
 # Base.metadata.create_all(bind=engine)
 
+# Mount static folder to serve images
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # --- Initialize DB for MySQL ---
+
+
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
@@ -890,8 +894,5 @@ if __name__ == "__main__":
     # Ensure static folder exists
     os.makedirs("static/images", exist_ok=True)
 
-    # Mount static folder to serve images
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-
-    uvicorn.run(app, host="0.0.0.0", port=9000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
