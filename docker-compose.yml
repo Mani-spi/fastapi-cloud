@@ -13,9 +13,15 @@ services:
       - MYSQL_ROOT_HOST=%
     # Remove public port exposure for safety during test:
     # ports:
-    #   - "3306:3306"
+    #   - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     build: .
@@ -28,7 +34,8 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
     # For persistence of uploaded images:
