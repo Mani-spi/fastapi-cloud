@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 from database import SessionLocal, engine
 from fastapi import FastAPI, WebSocket, File, UploadFile, Form
-from models import Base, Customer, MachineModel, SerialNumbers, CustomerUserModel, CustomerPrivilegeEnum, ManagementPrivilegeEnum, Management, ManagementUserModel, MachineDetails
+from models import Base, Customer, MachineModel, SerialNumbers, CustomerUserModel, CustomerPrivilegeEnum, ManagementPrivilegeEnum, Management, ManagementUserModel, CompletedData
 from sqlalchemy.exc import IntegrityError
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,9 +25,8 @@ app = FastAPI()
 # Mount static folder to serve images
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 # --- Initialize DB for MySQL ---
-
-
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
@@ -769,6 +768,11 @@ def list_customers(db: Session = Depends(get_db)):
     return db.query(Customer).all()
 
 
+@app.get("/completed_data/")
+def list_completed_data(db: Session = Depends(get_db)):
+    return db.query(CompletedData).all()
+
+
 @app.get("/management/")
 def list_management(db: Session = Depends(get_db)):
     return db.query(Management).all()
@@ -872,6 +876,88 @@ async def websocket_endpoint(websocket: WebSocket):
         await data_updated_event.wait()
         data_updated_event.clear()
         await websocket.send_text(json.dumps(dashboard_store))
+
+
+class CompletedDataModel(BaseModel):
+    BatchChemRecordID: int
+    GroupNo: int
+    BatchID: int
+    BatchName: str
+    MachineName: str
+    MachineID: int
+    SeqNo: int
+    ChemNo: int
+    Chemical: str
+    DispenseMachine: str
+
+    TankName: str
+    TankID: int
+    TargetWeight: float
+    DispensedWeight: float
+    AfterWash: float
+    DispWaterWeight: float
+    UserName: str
+    Status: str
+    Date: str
+    PerCosts: float
+
+    TotalCosts: float
+    DispDate: str
+    DispTime: str
+    RequestType: str
+    RequestFrom: str
+    RequestTime: str
+    DispenseDuration: str
+
+
+@app.post("/send_completed_data/")
+async def submit_completed_data(request: CompletedDataModel, db: Session = Depends(get_db)):
+
+    print(f"✅ Received data: {request}")
+
+    # Save to database
+    new_entry = CompletedData(
+        BatchChemRecordID=str(request.BatchChemRecordID),
+        GroupNo=str(request.GroupNo),
+        BatchID=str(request.BatchID),
+        BatchName=str(request.BatchName),
+        MachineName=str(request.MachineName),
+        MachineID=str(request.MachineID),
+        SeqNo=str(request.SeqNo),
+        ChemNo=str(request.ChemNo),
+        Chemical=str(request.Chemical),
+        DispenseMachine=str(request.DispenseMachine),
+
+        TankName=str(request.TankName),
+        TankID=str(request.TankID),
+        TargetWeight=str(request.TargetWeight),
+        DispensedWeight=str(request.DispensedWeight),
+        AfterWash=str(request.AfterWash),
+        DispWaterWeight=str(request.DispWaterWeight),
+        UserName=str(request.UserName),
+        Status=str(request.Status),
+        Date=str(request.Date),
+        PerCosts=str(request.PerCosts),
+
+        TotalCosts=str(request.TotalCosts),
+        DispDate=str(request.DispDate),
+        DispTime=str(request.DispTime),
+        RequestType=str(request.RequestType),
+        RequestFrom=str(request.RequestFrom),
+        RequestTime=str(request.RequestTime),
+        DispenseDuration=str(request.DispenseDuration),
+    )
+    db.add(new_entry)
+    db.commit()
+
+    # Trigger WebSocket update, so WebSocket clients know there’s new data.
+    data_updated_event.set()
+
+    return {
+        "status": "success",
+        "message": "Data received and processed",
+        "data": request.dict()
+    }
 
 
 @app.get("/get_dashboard/")

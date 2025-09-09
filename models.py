@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlalchemy import Column, String, Integer, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, Integer, ForeignKey, Text, JSON, Float
 from database import Base
 from sqlalchemy.orm import relationship
 
@@ -147,6 +147,41 @@ class MachineModel(Base):
 
     # Optional: Add reverse relation for serial numbers
     serial_numbers = relationship("SerialNumbers", back_populates="machine_model", cascade="all, delete-orphan")
+
+
+class CompletedData(Base):
+    __tablename__ = "completed_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    BatchChemRecordID = Column(Integer)
+    GroupNo = Column(Integer)
+    BatchID = Column(Integer)
+    BatchName = Column(String(500))
+    MachineName = Column(String(500))
+    MachineID = Column(Integer)
+    SeqNo = Column(Integer)
+    ChemNo = Column(Integer)
+    Chemical = Column(String(500))
+    DispenseMachine = Column(String(500))
+
+    TankName = Column(String(500))
+    TankID = Column(Integer)
+    TargetWeight = Column(Float)
+    DispensedWeight = Column(Float)
+    AfterWash = Column(Float)
+    DispWaterWeight = Column(Float)
+    UserName = Column(String(500))
+    Status = Column(String(500))
+    Date = Column(String(500))
+    PerCosts = Column(Float)
+
+    TotalCosts = Column(Float)
+    DispDate = Column(String(500))
+    DispTime = Column(String(500))
+    RequestType = Column(String(500))
+    RequestFrom = Column(String(500))
+    RequestTime = Column(String(500))
+    DispenseDuration = Column(String(500))
 
 
 class SerialNumbers(Base):
